@@ -29,11 +29,28 @@ def check_length(text: str) -> None:
         )
 
 
+def verify_output(path: Path, text: str) -> None:
+    """Guard: the written file must be byte-identical to the entry text.
+
+    The gate reads /output/entry.txt as-is, so any drift (extra newline,
+    re-encoding, truncation) would change what the judge sees. Refuse
+    loudly instead of submitting a different line.
+    """
+    expected = text.encode("utf-8")
+    actual = path.read_bytes()
+    if actual != expected:
+        raise SystemExit(
+            f"entry output drifted: wrote {len(actual)} bytes, "
+            f"expected {len(expected)} bytes byte-for-byte"
+        )
+
+
 def main() -> None:
     check_length(TEXT)
     out = Path("/output/entry.txt")
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(TEXT, encoding="utf-8")
+    verify_output(out, TEXT)
 
 
 if __name__ == "__main__":
